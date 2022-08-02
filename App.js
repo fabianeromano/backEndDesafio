@@ -1,41 +1,18 @@
-class Usuario {
-    constructor(nombre, apellido) {
-        this.nombre = nombre;
-        this.apellido = apellido;
-        this.libros = [];
-        this.mascotas = [];
+class Contenedor{
+    save(data){
+        
+        return id;
     }
-    getFullName() {
-        return `${this.nombre} ${this.apellido}`;
+    getById(id){
+        return data
     }
-    addMascota(mascota) {
-        this.mascotas.push(mascota);
+    getAll(){
+        return entireData
+    }
+    deleteById(id){
 
     }
-    countMascotas() {
-        return `Cantidad de mascotas: ${this.mascotas.length}`;
-    }
-    addBook(nombre, autor) {
-        this.libros.push({
-            nombre,
-            autor
-        });
-    }
-    getBookNames() {
-        let bookNames = [];
-        this.libros.forEach(libro => {
-            bookNames.push(libro.nombre);
-        })
-        return bookNames;
-    }
+    deleteAll(){
 
+    }
 }
-
-let usuario = new Usuario("Elon", "Musk");
-console.log(usuario.getFullName());
-usuario.addMascota("Perro");
-usuario.addMascota("Gato");
-console.log(usuario.countMascotas());
-usuario.addBook("El señor de las moscas", "William Golding");
-usuario.addBook("Fundacion", "Isaac Asimov");
-console.log(usuario.getBookNames());
