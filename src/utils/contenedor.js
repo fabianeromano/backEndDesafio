@@ -7,18 +7,18 @@ class Contenedor {
 
 
     async save(nuevoObjeto) {
-        const objetos = await this.getAll()
-        let newId
-        if (objetos.length == 0) {
-            newId = 1
-        } else {
-            const ultimoId = parseInt(objetos[objetos.length - 1].id)
-            newId = ultimoId + 1;
-        }
-
-        objetos.push({ ...nuevoObjeto, id: newId })
-
         try {
+            const objetos = await this.getAll()
+            let newId
+            if (objetos.length == 0) {
+                newId = 1
+            } else {
+                const ultimoId = parseInt(objetos[objetos.length - 1].id)
+                newId = ultimoId + 1;
+            }
+
+            objetos.push({ ...nuevoObjeto, id: newId })
+
             await fs.writeFile(this.ruta, JSON.stringify(objetos, null, 2))
             return newId
         } catch (error) {
@@ -31,9 +31,9 @@ class Contenedor {
             const filtrarObjetos = objetos.find((elem) => elem.id === id);
             const response = filtrarObjetos === undefined ? null : filtrarObjetos;
             return response;
-          } catch (error) {
+        } catch (error) {
             throw new Error(`Error al buscar un producto por id: ${error}`);
-          }
+        }
     }
     async getAll() {
         try {
@@ -44,15 +44,15 @@ class Contenedor {
         }
     }
     async deleteById(id) {
-        const objetos = await this.getAll();
-        const nuevoDato = objetos.filter((elem) => elem.id !== id);
-        if (nuevoDato.length === objetos.length) {
-          throw new Error(`Error while deleting. The id: ${id} was not found.`);
-        }
         try {
+            const objetos = await this.getAll();
+            const nuevoDato = objetos.filter((elem) => elem.id !== id);
+            if (nuevoDato.length === objetos.length) {
+                throw new Error(`Error while deleting. The id: ${id} was not found.`);
+            }
             await fs.writeFile(this.ruta, JSON.stringify(objetos, null, 2))
         } catch (error) {
-          throw new Error(`Error while deleting.`);
+            throw new Error(`Error while deleting.`);
         }
     }
     async deleteAll() {
