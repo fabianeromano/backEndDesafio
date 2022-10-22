@@ -1,4 +1,7 @@
 <h1>Ingrese Producto</h1>	
+{{#if username}}	
+<p>Hola, {{ username }}</p>
+{{/if}}
 <form id="product-form">	
   <label for="title">Nombre</label>	
   <input type="text" name="title" id="title" />	

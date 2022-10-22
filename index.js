@@ -5,6 +5,10 @@ import { Server as IOServer } from "socket.io";
 import { faker } from '@faker-js/faker';
 import normalizr from 'normalizr';
 import util from "util";
+import cookieParser from 'cookie-parser'
+import session from 'express-session'
+import MongoStore from 'connect-mongo'
+const advancedOptions = { useNewUrlParser: true, useUnifiedTopology: true };
 
 const schema = normalizr.schema;
 const normalize = normalizr.normalize;
@@ -19,11 +23,43 @@ const io = new IOServer(httpServer);
 app.engine("handlebars", engine());
 app.use(express.urlencoded({ extended: true }));
 app.set("view engine", "handlebars");
+app.use(cookieParser());
+app.use(session({
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URL || 'mongodb+srv://sergio:Ser1366.@cluster0.aujgv.mongodb.net/?retryWrites=true&w=majority',
+    mongoOptions: advancedOptions,
+  }),
+  secret: process.env.SESSION_SECRET || 'qweqwe',
+  resave: false,
+  saveUninitialized: false,
+}));
 
 app.set("views", "./src/views");
 
 app.get("/", (req, res) => {
-  res.render("home");
+  res.render("home", { username: req.session.user?.username ?? '' });
+});
+app.get("/login", (req, res) => {
+  res.render("login");
+});
+app.post("/login", (req, res) => {
+  const { username } = req.body
+  req.session.user = {
+    username
+  }
+  req.session.save(err => {
+    if (err) {
+      console.log(err);
+    } else {
+      res.render("home", { username: req.session.user?.username });
+    }
+  });
+});
+app.get("/logout", (req, res) => {
+  const username = req.session.user?.username ?? '';
+  req.session.destroy(err => {
+    res.render("logout", { name: username });
+  });
 });
 app.get("/message-center", (req, res) => {
   res.render("message-center");
@@ -38,26 +74,26 @@ app.get("/productos-test", (req, res) => {
     }
     productos.push(producto)
   }
-  res.render("productos-test",{ productos, tieneProductos: productos.length > 0});
+  res.render("productos-test", { productos, tieneProductos: productos.length > 0 });
 });
 
-app.get("/productos", async(req, res) => {
+app.get("/productos", async (req, res) => {
   try {
     const productos = await productosRepository.getAll();
-  res.render("productos", { productos, tieneProductos: productos.length > 0 });
-} catch (err) {
-  res.send.status(404);
-}
+    res.render("productos", { productos, tieneProductos: productos.length > 0 });
+  } catch (err) {
+    res.send.status(404);
+  }
 });
 app.get("/messages", async (req, res) => {
   try {
     const parsedMessages = await messageRepository.getAll();
-    const authorSchema = new schema.Entity("author", {}, { idAttribute: "email"});
+    const authorSchema = new schema.Entity("author", {}, { idAttribute: "email" });
     const message = new schema.Entity('messages', {
-        author: authorSchema,
+      author: authorSchema,
     });
     const messageSchema = { messages: [message] };
-    const data = { messages: parsedMessages}
+    const data = { messages: parsedMessages }
     const normalizedMessages = normalize(data, messageSchema);
 
     const normalSize = Buffer.from(JSON.stringify(util.inspect(parsedMessages), true, 12, true)).length
@@ -81,7 +117,7 @@ const initServer = async () => {
 
   io.on("connection", async (socket) => {
     console.log("Usuario conectado");
-    
+
     const productos = await productosRepository.getAll();
     socket.emit("productos", productos);
 
@@ -93,7 +129,7 @@ const initServer = async () => {
       const productos = await messageRepository.getAll();
       io.sockets.emit("productos", productos);
     });
-    
+
     socket.on("new-message", async (data) => {
       await messageRepository.save(data);
       const messages = await messageRepository.getAll();
